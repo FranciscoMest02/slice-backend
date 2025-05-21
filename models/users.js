@@ -17,6 +17,27 @@ export class UsersModel {
         }
     }
 
+    static async getFromUsername(username) {
+      const session = driver.session()
+      try {
+        const query = `
+          MATCH (user:User {name: $username})
+          RETURN user
+        `;
+        const params = { username };
+        const result = await session.run(query, params);
+    
+        if (result.records.length === 0) {
+          return null;
+        }
+    
+        const userNode = result.records[0].get('user');
+        return { user: userNode.properties };
+      } finally {
+        await session.close();
+      }
+    }
+
     static async createFriendship (user1, user2) {
         const session = driver.session();
         try {

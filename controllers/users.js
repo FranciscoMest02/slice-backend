@@ -1,4 +1,5 @@
 import { UsersModel } from "../models/users.js";
+import { v4 as uuidv4 } from 'uuid';
 
 export class UserController {
     static async create (req, res) {
@@ -6,14 +7,21 @@ export class UserController {
             return res.status(400).send('Body required');
         }
         
-        const { id, name } = req.body;
+        const { username } = req.body;
     
-        if (!id || !name) {
-            return res.status(400).send('ID and name are required');
+        if (!username) {
+            return res.status(400).send('Username is required');
+        }
+
+        // Validate if the username is available
+        const existingUser = await UsersModel.getFromUsername(username);
+        if (existingUser) {
+            return res.status(409).json({ message: 'Username already taken' });
         }
     
         try {
-            const result = await UsersModel.createUser(id, name);
+            const id = uuidv4(); // Generate UUID
+            const result = await UsersModel.createUser(id, username);
             res.status(201).json({ message: 'User created successfully', result });
         } catch (err) {
             console.error(err);
