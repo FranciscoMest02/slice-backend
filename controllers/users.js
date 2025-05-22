@@ -59,10 +59,25 @@ export class UserController {
         }
     }
 
+    static async getUser (req, res) {
+        const id = req.params.id.toLowerCase();
+    
+        if (!id) {
+            return res.status(400).send('User ID is required');
+        }
+    
+        try {
+            const result = await UsersModel.getUser(id);
+            console.log('Result: ', result)
+            res.status(200).json({ result });
+        } catch (err) {
+            console.error(err);
+            res.status(500).send('Error fetching user');
+        }
+    }
+
     static async getFriends (req, res) {
         const id = req.params.id.toLowerCase();
-
-        console.log('ID: ', id)
     
         if (!id) {
             return res.status(400).send('User ID is required');
