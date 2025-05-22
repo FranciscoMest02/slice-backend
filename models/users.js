@@ -140,4 +140,39 @@ export class UsersModel {
         await session.close();
       }
     }
+
+    static async updateUser(id, updates) {
+      const session = driver.session()
+      try {
+        const setClauses = []
+        const params = { id }
+
+        Object.entries(updates).forEach(([key, value], index) => {
+          const paramKey = `field${index}`
+          setClauses.push(`user.${key} = $${paramKey}`)
+          params[paramKey] = value
+        })
+
+        if (setClauses.length === 0) {
+          throw new Error('No valid fields provided to update');
+        }
+
+        const query = `
+          MATCH (user:User {id: $id})
+          SET ${setClauses.join(', ')}
+          RETURN user
+        `
+
+        const result = await session.run(query, params)
+
+        if (result.records.length === 0) {
+            return null;
+        }
+
+        const updatedUser = result.records[0].get('user')
+        return updatedUser.properties
+      } finally {
+        await session.close();
+      }
+    }
 }

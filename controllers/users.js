@@ -76,6 +76,38 @@ export class UserController {
         }
     }
 
+    static async updateUser (req, res) {
+        const id = req.params.id.toLowerCase();
+    
+        if (!id) {
+            return res.status(400).send('User ID is required');
+        }
+
+        const immutableFields = ['id', 'created_at'];
+
+        const updates = { ...req.body };
+
+        for (const field of immutableFields) {
+            if (updates.hasOwnProperty(field)) {
+                return res.status(400).json({ error: `Field '${field}' cannot be modified.` });
+            }
+        }
+    
+        try {
+            const existingUser = await UsersModel.getUser(id);
+            if (!existingUser) {
+                return res.status(404).send('User not found');
+            }
+
+            const updatedUser = await UsersModel.updateUser(id, updates);
+
+            return res.status(200).json({ user: updatedUser });
+        } catch (err) {
+            console.error('Update error:', err);
+            return res.status(500).send('Error updating user');
+        }
+    }
+
     static async getFriends (req, res) {
         const id = req.params.id.toLowerCase();
     
