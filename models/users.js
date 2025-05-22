@@ -104,4 +104,19 @@ export class UsersModel {
         await session.close();
       }
     }
+
+    static async getFriends (id) {
+        const session = driver.session();
+        try {
+            const query = `
+                MATCH (u:User {id: $id})-[:FRIENDS_WITH]->(friend:User)
+                RETURN friend
+            `;
+            const params = { id };
+            const result = await session.run(query, params);
+            return result.records.map(record => record.get('friend').properties);
+        } finally {
+            await session.close();
+        }
+    }
 }
