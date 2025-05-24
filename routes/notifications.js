@@ -5,7 +5,7 @@ export const notificationRouter = express.Router();
 
 // Replace this with actual stored device tokens
 const testTokens = [
-  "e42631a103c8e7c4fe61b4715821260d761b112127afa49553a23ef420696fab"
+    process.env.TEST_DEVICE_ID
 ];
 
 notificationRouter.post('/send-test', (req, res) => {
