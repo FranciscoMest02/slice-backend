@@ -32,3 +32,6 @@ coverage/
 # Temporary files
 *.tmp
 *.swp
+
+# APN Key
+AuthKey_NXQ4M8MPX3.p8

@@ -1,6 +1,7 @@
 import express from 'express'
 import morgan from 'morgan';
 import { usersRouter } from './routes/users.js';
+import { notificationRouter } from './routes/notifications.js'
 //require('dotenv').config();
 
 const app = express();
@@ -12,6 +13,8 @@ app.use(morgan('dev'));
 app.use(express.json());
 // app.use('/pairings', pairingRoutes);
 app.use('/user', usersRouter);
+
+app.use('/test', notificationRouter)
 
 const PORT = process.env.PORT || 3000;
 
