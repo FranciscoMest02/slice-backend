@@ -1,7 +1,7 @@
-import express from 'express';
+import { Router } from 'express';
 import { sendNotification } from '../notifications/sendNotifications.js';
 
-export const notificationRouter = express.Router();
+export const notificationRouter = Router();
 
 // Replace this with actual stored device tokens
 const testTokens = [
