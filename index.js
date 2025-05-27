@@ -5,6 +5,7 @@ import { friendsRouter } from './routes/friends.js';
 //require('dotenv').config();
 
 const app = express();
+app.set('trust proxy', true);
 app.disable('x-powered-by');
 
 //Log the https requests
