@@ -7,7 +7,7 @@ export class UsersModel {
         const session = driver.session();
         try {
             const query = `
-                CREATE (u:User {id: $id, name: $name})
+                CREATE (u:User {id: $id, name: $name, avatar: "profile1"})
                 RETURN u
             `;
             const params = { id, name };
