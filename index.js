@@ -1,6 +1,7 @@
 import express from 'express'
 import morgan from 'morgan';
 import { usersRouter } from './routes/users.js';
+import { friendsRouter } from './routes/friends.js';
 //require('dotenv').config();
 
 const app = express();
@@ -12,6 +13,7 @@ app.use(morgan('dev'));
 app.use(express.json());
 // app.use('/pairings', pairingRoutes);
 app.use('/user', usersRouter);
+app.use('/friends', friendsRouter)
 
 const PORT = process.env.PORT || 3000;
 
