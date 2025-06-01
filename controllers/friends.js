@@ -2,11 +2,14 @@ import { FriendsModel } from "../models/friends.js";
 
 export class FriendsController {
     static async requestFriendship(req, res) {
-        const { userId, friendId } = req.body;
+        let { userId, friendId } = req.body;
 
         if (!userId || !friendId) {
             return res.status(400).send('User ID and Friend ID are required');
         }
+
+        userId = userId.toLowerCase();
+        friendId = friendId.toLowerCase();
 
         try {
             const result = await FriendsModel.requestFriendship(userId, friendId);
@@ -18,7 +21,7 @@ export class FriendsController {
     }
 
     static async getFriendRequests(req, res) {
-        const userId = req.params.id;
+        const userId = req.params.id.toLowerCase();
 
         if (!userId) {
             return res.status(400).send('User ID is required');
@@ -34,11 +37,14 @@ export class FriendsController {
     }
 
     static async acceptFriendRequest(req, res) {
-        const { userId, friendId } = req.body;
+        let { userId, friendId } = req.body;
 
         if (!userId || !friendId) {
             return res.status(400).send('User ID and Friend ID are required');
         }
+
+        userId = userId.toLowerCase();
+        friendId = friendId.toLowerCase();
 
         try {
             const result = await FriendsModel.acceptFriendRequest(userId, friendId);
