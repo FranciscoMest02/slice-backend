@@ -167,8 +167,8 @@ export class UsersModel {
             const promptId = record.get('promptId')
             const prompt = promptsArray.find(p => p.id === promptId)
 
-            const isFirst = record.get('userForSide0') === id
-            const maskHalf = record.get('firstUserId') === id
+            const isFirst = record.get('firstUserId') === id
+            const maskHalf = record.get('userForSide0') === id
             const mask = maskHalf ? 0 : 1
 
             return {
