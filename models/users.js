@@ -155,7 +155,7 @@ export class UsersModel {
         try {
             const query = `
                 MATCH (u:User {id: $id})-[r:PAIRED_WITH {date: $today}]-(pair:User)
-                RETURN pair.name AS name, pair.id AS id, pair.avatar AS avatar, r.promptId AS promptId, r.userForSide0 AS userForSide0, r.firstUserId AS firstUserId, r.firstHalfKey AS firstHalfKey, r.secondHalfKey AS secondHalfKey
+                RETURN pair.name AS name, pair.id AS id, pair.avatar AS avatar, r.promptId AS promptId, r.userForSide0 AS userForSide0, r.firstUserId AS firstUserId, r.firstHalfKey AS firstHalfKey, r.secondHalfKey AS secondHalfKey, r.finalKey AS finalKey
                 LIMIT 1
             `;
             const params = { id, today: todayString() }
@@ -181,7 +181,8 @@ export class UsersModel {
               isFirst,
               maskHalf: mask,
               firstHalfKey: record.get('firstHalfKey') || null,
-              secondHalfKey: record.get('secondHalfKey') || null
+              secondHalfKey: record.get('secondHalfKey') || null,
+              completeImage: record.get('finalKey') || null
             };
         } finally {
             await session.close();

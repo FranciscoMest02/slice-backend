@@ -74,4 +74,34 @@ export class ImagesModel {
             await session.close();
         }
     }
+
+    static async finalImageUploaded(key, userId) {
+        const session = driver.session();
+        const today = todayString();
+        const url = `https://${BUCKET_NAME}.s3.amazonaws.com/${key}`;
+
+        try {
+            const query = `
+                MATCH (u1:User {id: $userId})-[r:PAIRED_WITH {date: $today}]-(u2:User)
+                SET r.finalKey = $key,
+                    r.finalUrl = $url
+                RETURN u1.id AS u1Id, u2.id AS u2Id, r.finalUrl AS finalUrl
+            `;
+            const params = { userId, today, key, url };
+            const result = await session.run(query, params);
+
+            if (result.records.length === 0) {
+                throw new Error('No paired connection found for today');
+            }
+
+            const record = result.records[0];
+            return {
+                user: record.get('u1Id'),
+                friend: record.get('u2Id'),
+                imageURL: record.get('finalUrl')
+            };
+        } finally {
+            await session.close();
+        }
+    }
 }

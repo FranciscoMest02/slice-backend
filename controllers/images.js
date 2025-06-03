@@ -49,4 +49,24 @@ export class ImagesController {
             res.status(500).json({ error: 'Failed to acknowledge image upload' });
         }
     }
+
+    static async finalImageUploaded (req, res) {
+        const { key } = req.body;
+        let userId = req.params.id;
+
+        if (!userId) return res.status(400).json({ error: 'Missing user ID' });
+
+        if (!key) return res.status(400).json({ error: 'Missing key' });
+
+        userId = userId.toLowerCase();
+
+        try {
+            const result = await ImagesModel.finalImageUploaded(key, userId);
+            console.log(result)
+            res.status(200).json({ message: 'Final image upload acknowledged', result });
+        } catch (err) {
+            console.error('Image upload error:', err);
+            res.status(500).json({ error: 'Failed to acknowledge image upload' });
+        }
+    }
 }

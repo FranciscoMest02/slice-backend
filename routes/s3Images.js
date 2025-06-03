@@ -9,3 +9,5 @@ imagesRouter.get('/generate-upload-url', ImagesController.generatePresignedUploa
 imagesRouter.get('/generate-download-url',ImagesController.generatePresignedDownloadURL);
 // Tell the backend that the image has been uploaded
 imagesRouter.post('/uploaded/:id', ImagesController.imageUploaded);
+// Tell the backend that the final image has been updloaded
+imagesRouter.post('/uploaded/:id/final', ImagesController.finalImageUploaded);
