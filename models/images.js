@@ -35,8 +35,21 @@ export class ImagesModel {
         try {
             const query = `
                 MATCH (u1:User {id: $userId})-[r:PAIRED_WITH {date: $today}]-(u2:User)
-                SET r.imageKey = $key, r.imageURL = $url
-                RETURN u1.id AS u1Id, u2.id AS u2Id, r.imageKey AS imageKey
+                WITH r, u1, u2, $key AS key, $url AS url,
+                    CASE WHEN r.firstUserId = $userId THEN true ELSE false END AS isFirst
+                CALL {
+                    WITH r, isFirst, key, url
+                    WITH r,
+                        CASE WHEN isFirst THEN key ELSE r.firstHalfKey END AS firstHalfKey,
+                        CASE WHEN isFirst THEN url ELSE r.firstHalfUrl END AS firstHalfUrl,
+                        CASE WHEN isFirst THEN r.secondHalfKey ELSE key END AS secondHalfKey,
+                        CASE WHEN isFirst THEN r.secondHalfUrl ELSE url END AS secondHalfUrl
+                    SET r.firstHalfKey = firstHalfKey,
+                        r.firstHalfUrl = firstHalfUrl,
+                        r.secondHalfKey = secondHalfKey,
+                        r.secondHalfUrl = secondHalfUrl
+                }
+                RETURN u1.id AS u1Id, u2.id AS u2Id, r.firstUserId AS firstUserId, r.firstHalfUrl AS firstHalfUrl, r.secondHalfUrl AS secondHalfUrl
             `;
             const params = { userId, today, key, url };
             const result = await session.run(query, params);
@@ -46,11 +59,16 @@ export class ImagesModel {
             }
 
             const record = result.records[0];
+            const firstHalfUrl = record.get('firstHalfUrl');
+            const secondHalfUrl = record.get('secondHalfUrl');
+            const firstUserId = record.get('firstUserId');
+
+            const uploadedUrl = (userId === firstUserId) ? firstHalfUrl : secondHalfUrl;
 
             return {
                 user: record.get('u1Id'),
                 friend: record.get('u2Id'),
-                imageURL: record.get('imageKey')
+                imageURL: uploadedUrl
             };
         } finally {
             await session.close();
