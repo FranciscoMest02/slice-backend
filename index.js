@@ -3,7 +3,10 @@ import morgan from 'morgan';
 import { usersRouter } from './routes/users.js';
 import { friendsRouter } from './routes/friends.js';
 import { imagesRouter } from './routes/s3Images.js';
-//require('dotenv').config();
+
+if (process.env.ENABLE_CRON === 'true') {
+  import('./jobs/pairingCron.js');
+}
 
 const app = express();
 app.set('trust proxy', true);

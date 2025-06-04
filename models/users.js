@@ -122,7 +122,7 @@ export class UsersModel {
 
             await session.run(`
               MATCH (a:User {id: $user1}), (b:User {id: $user2})
-              CREATE (a)-[:PAIRED_WITH {date: $today, promptId: $promptId, firstUserId: $firstUserId , userForSide0: $userForSide0 }]->(b)
+              CREATE (a)-[:PAIRED_WITH {date: $today, notificationSent: false, promptId: $promptId, firstUserId: $firstUserId , userForSide0: $userForSide0 }]->(b)
             `, {
               user1: pair.user1,
               user2: pair.user2,

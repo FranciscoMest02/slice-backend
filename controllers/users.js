@@ -13,11 +13,11 @@ export class UserController {
             return res.status(400).send('Username is required');
         }
 
-        // Validate if the username is available
-        const existingUser = await UsersModel.getFromUsername(username);
-        if (existingUser) {
-            return res.status(409).json({ message: 'Username already taken' });
-        }
+        // Validate if the username is available (for the moment is disabled)
+        // const existingUser = await UsersModel.getFromUsername(username);
+        // if (existingUser) {
+        //    return res.status(409).json({ message: 'Username already taken' });
+        //}
     
         try {
             const id = uuidv4(); // Generate UUID
