@@ -1,7 +1,6 @@
 import apn from 'apn';
-import { getUnnotifiedPairs } from '../database/getUnnotifiedPairs.js';
-import { markPairNotified } from '../database/markPairNotified.js';
 
+import { getUnnotifiedPairs, markPairNotified } from './pairingService.js';
 
 const apnProvider = new apn.Provider({
   token: {
