@@ -32,3 +32,6 @@ coverage/
 # Temporary files
 *.tmp
 *.swp
+
+# APN keys
+*.p8
