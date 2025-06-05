@@ -1,4 +1,5 @@
 import driver from "../drivers/neo4j.js";
+import { promptsArray } from "../prompts.js";
 import todayString from "../utils/date.js";
 
 export async function createPairs() {
