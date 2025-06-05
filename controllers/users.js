@@ -7,7 +7,7 @@ export class UserController {
             return res.status(400).send('Body required');
         }
         
-        const { username } = req.body;
+        const { username, avatar } = req.body;
     
         if (!username) {
             return res.status(400).send('Username is required');
@@ -21,7 +21,7 @@ export class UserController {
     
         try {
             const id = uuidv4(); // Generate UUID
-            const result = await UsersModel.createUser(id, username);
+            const result = await UsersModel.createUser(id, username, avatar);
             res.status(201).json({ message: 'User created successfully', result });
         } catch (err) {
             console.error(err);

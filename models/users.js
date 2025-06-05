@@ -3,14 +3,15 @@ import { promptsArray } from "../prompts.js";
 import todayString from "../utils/date.js";
 
 export class UsersModel {
-    static async createUser (id, name) {
+    static async createUser (id, name, avatar) {
         const session = driver.session();
         try {
+            const finalAvatar = avatar ?? "profile1"
             const query = `
-                CREATE (u:User {id: $id, name: $name, avatar: "profile1"})
+                CREATE (u:User {id: $id, name: $name, avatar: $avatar})
                 RETURN u
             `;
-            const params = { id, name };
+            const params = { id, name, avatar: finalAvatar };
             const result = await session.run(query, params);
             return result.records[0].get('u').properties;
         } finally {
