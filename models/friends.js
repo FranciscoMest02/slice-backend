@@ -49,8 +49,8 @@ export class FriendsModel {
                 CREATE (u1)-[:FRIENDS_WITH]->(u2)
                 CREATE (u2)-[:FRIENDS_WITH]->(u1)
                 WITH u1, u2
-                OPTIONAL MATCH (u1)-[m1:MATCHED_WITH {today: $today}]-()
-                OPTIONAL MATCH (u2)-[m2:MATCHED_WITH {today: $today}]-()
+                OPTIONAL MATCH (u1)-[m1:PAIRED_WITH {today: $today}]-()
+                OPTIONAL MATCH (u2)-[m2:PAIRED_WITH {today: $today}]-()
                 RETURN u1, u2, m1 IS NULL AS u1CanMatch, m2 IS NULL AS u2CanMatch
             `;
             const params = { userId, friendId, today };
