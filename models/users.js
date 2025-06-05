@@ -1,6 +1,7 @@
 import driver from "../drivers/neo4j.js";
 import { promptsArray } from "../prompts.js";
 import todayString from "../utils/date.js";
+import { v4 as uuidv4 } from 'uuid';
 
 export class UsersModel {
     static async createUser (id, name, avatar) {
@@ -121,10 +122,13 @@ export class UsersModel {
             const firstUserId = pairArray[goesFirst ? 0 : 1]; 
             const userForSide0 = pairArray[isFirstSide ? 0 : 1];
 
+            const sliceId = uuidv4()
+
             await session.run(`
               MATCH (a:User {id: $user1}), (b:User {id: $user2})
-              CREATE (a)-[:PAIRED_WITH {date: $today, notificationSent: false, promptId: $promptId, firstUserId: $firstUserId , userForSide0: $userForSide0 }]->(b)
+              CREATE (a)-[:PAIRED_WITH { id: $sliceId, date: $today, notificationSent: false, promptId: $promptId, firstUserId: $firstUserId , userForSide0: $userForSide0 }]->(b)
             `, {
+              sliceId,
               user1: pair.user1,
               user2: pair.user2,
               today,
@@ -156,7 +160,7 @@ export class UsersModel {
         try {
             const query = `
                 MATCH (u:User {id: $id})-[r:PAIRED_WITH {date: $today}]-(pair:User)
-                RETURN pair.name AS name, pair.id AS id, pair.avatar AS avatar, r.promptId AS promptId, r.userForSide0 AS userForSide0, r.firstUserId AS firstUserId, r.firstHalfKey AS firstHalfKey, r.secondHalfKey AS secondHalfKey, r.finalKey AS finalKey
+                RETURN pair.name AS name, pair.id AS id, pair.avatar AS avatar, r.id AS sliceId, r.promptId AS promptId, r.userForSide0 AS userForSide0, r.firstUserId AS firstUserId, r.firstHalfKey AS firstHalfKey, r.secondHalfKey AS secondHalfKey, r.finalKey AS finalKey
                 LIMIT 1
             `;
             const params = { id, today: todayString() }
@@ -173,6 +177,7 @@ export class UsersModel {
             const mask = maskHalf ? 0 : 1
 
             return {
+              id: record.get('sliceId'),
               friend: {
                 id: record.get('id'),
                 name: record.get('name'),

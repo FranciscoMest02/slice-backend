@@ -1,6 +1,7 @@
 import driver from "../drivers/neo4j.js";
 import { promptsArray } from "../prompts.js";
 import todayString from "../utils/date.js";
+import { v4 as uuidv4 } from 'uuid';
 
 export async function createPairs() {
     const session = driver.session();
@@ -63,10 +64,13 @@ export async function createPairs() {
         const firstUserId = pairArray[goesFirst ? 0 : 1]; 
         const userForSide0 = pairArray[isFirstSide ? 0 : 1];
 
+        const sliceId = uuidv4()
+
         await session.run(`
             MATCH (a:User {id: $user1}), (b:User {id: $user2})
-            CREATE (a)-[:PAIRED_WITH {date: $today, notificationSent: false, promptId: $promptId, firstUserId: $firstUserId , userForSide0: $userForSide0 }]->(b)
+            CREATE (a)-[:PAIRED_WITH { id: $sliceId, date: $today, notificationSent: false, promptId: $promptId, firstUserId: $firstUserId , userForSide0: $userForSide0 }]->(b)
         `, {
+            sliceId,
             user1: pair.user1,
             user2: pair.user2,
             today,
