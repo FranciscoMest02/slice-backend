@@ -101,7 +101,7 @@ export async function getUnnotifiedPairs() {
   const session = driver.session();
   const query = `
     MATCH (a:User)-[r:PAIRED_WITH {notificationSent: false}]->(b:User)
-    RETURN id(r) AS pairId, a {.*, id: a.id } AS userA, b {.*, id: b.id } AS userB
+    RETURN r.id AS pairId, a {.*, id: a.id } AS userA, b {.*, id: b.id } AS userB
   `;
 
   try {
@@ -119,10 +119,9 @@ export async function getUnnotifiedPairs() {
 export async function markPairNotified(pairId) {
   const session = driver.session();
   const query = `
-    MATCH ()-[r:PAIRED_WITH]->()
-    WHERE id(r) = $pairId
+    MATCH ()-[r:PAIRED_WITH {id: $pairId}]->()
     SET r.notificationSent = true
-    RETURN id(r) AS updatedId
+    RETURN r.id AS updatedId
   `;
 
   try {
