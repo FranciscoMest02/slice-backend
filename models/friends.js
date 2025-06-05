@@ -72,9 +72,9 @@ export class FriendsModel {
 
                 await session.run(`
                     MATCH (a:User {id: $user1}), (b:User {id: $user2})
-                    CREATE (a)-[:MATCHED_WITH {
+                    CREATE (a)-[:PAIRED_WITH {
                         today: $today,
-                        notificationSent: false,
+                        notificationSent: true,
                         promptId: $promptId,
                         firstUserId: $firstUserId,
                         userForSide0: $userForSide0
