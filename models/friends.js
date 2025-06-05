@@ -70,9 +70,12 @@ export class FriendsModel {
                 const firstUserId = pairArray[goesFirst ? 0 : 1];
                 const userForSide0 = pairArray[isFirstSide ? 0 : 1];
 
+                const sliceId = uuidv4()
+
                 await session.run(`
                     MATCH (a:User {id: $user1}), (b:User {id: $user2})
                     CREATE (a)-[:PAIRED_WITH {
+                        id: $sliceId,
                         date: $today,
                         notificationSent: true,
                         promptId: $promptId,
@@ -80,6 +83,7 @@ export class FriendsModel {
                         userForSide0: $userForSide0
                     }]->(b)
                 `, {
+                    sliceId,
                     user1: userId,
                     user2: friendId,
                     today,
