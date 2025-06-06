@@ -1,4 +1,4 @@
-import { apnProvider } from "../drivers/apnsNotifications";
+import { apnProvider } from "../drivers/apnsNotifications.js";
 
 export class NotificationService {
     static async sendFriendRequestNotification({ to, from }) {

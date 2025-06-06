@@ -1,3 +1,5 @@
+import apn from 'apn';
+
 export const apnProvider = new apn.Provider({
   token: {
     key: process.env.APNS_KEY_PATH,
