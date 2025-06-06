@@ -157,4 +157,14 @@ export class UserController {
             res.status(500).send('Error fetching user pair');
         }
     }
+
+    static async getTodaysPairings(req, res) {
+        try {
+            const result = await UsersModel.getTodaysPairings();
+            res.status(200).json({ result });
+        } catch (err) {
+            console.error(err);
+            res.status(500).send('Error fetching today\'s pairings');
+        }
+    }
 }

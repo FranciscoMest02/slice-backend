@@ -265,4 +265,26 @@ export class UsersModel {
         await session.close();
       }
     }
+
+    static async getTodaysPairings() {
+        const session = driver.session();
+        const today = todayString();
+
+        try {
+            const query = `
+                MATCH (a:User)-[r:PAIRED_WITH {date: $today}]-(b:User)
+                WHERE id(a) < id(b) // avoid duplicates
+                RETURN r.id AS pairId, a.name AS user1, b.name AS user2
+            `;
+            const params = { today };
+            const result = await session.run(query, params);
+            return result.records.map(record => ({
+                pairId: record.get('pairId'),
+                user1: record.get('user1'),
+                user2: record.get('user2')
+            }));
+        } finally {
+            await session.close();
+        }
+    }
 }
