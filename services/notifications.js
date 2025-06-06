@@ -1,15 +1,7 @@
 import apn from 'apn';
 
 import { getUnnotifiedPairs, markPairNotified } from './pairingService.js';
-
-const apnProvider = new apn.Provider({
-  token: {
-    key: process.env.APNS_KEY_PATH,
-    keyId: process.env.APNS_KEY_ID,
-    teamId: process.env.APNS_TEAM_ID
-  },
-  production: process.env.APNS_PRODUCTION === 'true'
-});
+import { apnProvider } from '../drivers/apnsNotifications.js';
 
 export async function sendPairNotifications() {
   const pairs = await getUnnotifiedPairs(); // fetch pairs with notificationSent = false
