@@ -16,11 +16,11 @@ export class FriendsController {
 
         try {
             const result = await FriendsModel.requestFriendship(userId, friendId);
-
+            
             const receiver = result.receiver
             const pushToken = receiver?.deviceToken
 
-            const senderName = sender.name 
+            const senderName = result.sender.name
 
             if (pushToken) {
                 NotificationService.sendFriendRequestNotification({ to: pushToken, from: senderName })
@@ -60,6 +60,14 @@ export class FriendsController {
 
         try {
             const result = await FriendsModel.acceptFriendRequest(userId, friendId);
+            
+            const pushToken = result.friend?.deviceToken;
+            const senderName = result.user?.name;
+
+            if (pushToken) {
+                NotificationService.sendAcceptedFriendRequestNotification({ to: pushToken, from: senderName })
+            }
+
             res.status(200).send({ result });
         } catch (err) {
             console.error(err);
