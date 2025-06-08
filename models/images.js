@@ -1,7 +1,7 @@
 import { s3 } from '../drivers/s3aws.js';
 import driver from "../drivers/neo4j.js";
 import todayString from "../utils/date.js";
-
+import { NotificationService } from "../services/NotificationService.js";
 
 const BUCKET_NAME = process.env.S3_BUCKET_NAME;
 
@@ -49,7 +49,7 @@ export class ImagesModel {
                         r.secondHalfKey = secondHalfKey,
                         r.secondHalfUrl = secondHalfUrl
                 }
-                RETURN u1.id AS u1Id, u2.id AS u2Id, r.firstUserId AS firstUserId, r.firstHalfUrl AS firstHalfUrl, r.secondHalfUrl AS secondHalfUrl
+                RETURN u1.id AS u1Id, u2.id AS u2Id, u2.deviceToken AS friendDeviceId, r.firstUserId AS firstUserId, r.firstHalfUrl AS firstHalfUrl, r.secondHalfUrl AS secondHalfUrl
             `;
             const params = { userId, today, key, url };
             const result = await session.run(query, params);
@@ -64,6 +64,12 @@ export class ImagesModel {
             const firstUserId = record.get('firstUserId');
 
             const uploadedUrl = (userId === firstUserId) ? firstHalfUrl : secondHalfUrl;
+
+            const deviceToken = record.get('friendDeviceId');
+            if (deviceToken) {
+                console.log(deviceToken, 'push token for knot update');
+                NotificationService.sendKnotUpdateNotification({ deviceToken })
+            }
 
             return {
                 user: record.get('u1Id'),
@@ -85,7 +91,7 @@ export class ImagesModel {
                 MATCH (u1:User {id: $userId})-[r:PAIRED_WITH {date: $today}]-(u2:User)
                 SET r.finalKey = $key,
                     r.finalUrl = $url
-                RETURN u1.id AS u1Id, u2.id AS u2Id, r.finalUrl AS finalUrl
+                RETURN u1.id AS u1Id, u2.id AS u2Id, u2.deviceToken AS friendDeviceId, r.finalUrl AS finalUrl
             `;
             const params = { userId, today, key, url };
             const result = await session.run(query, params);
@@ -95,6 +101,12 @@ export class ImagesModel {
             }
 
             const record = result.records[0];
+
+            const pushToken = record.get('friendDeviceId');
+            if (pushToken) {
+                NotificationService.sendKnotUpdateNotification({ pushToken })
+            }
+
             return {
                 user: record.get('u1Id'),
                 friend: record.get('u2Id'),
