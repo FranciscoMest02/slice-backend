@@ -29,6 +29,27 @@ export class UserController {
         }
     }
 
+    static async deleteUser(req, res) {
+        const id = req.params.id.toLowerCase();
+    
+        if (!id) {
+            return res.status(400).send({error: 'User ID is required'});
+        }
+    
+        try {
+            const existingUser = await UsersModel.getUser(id);
+            if (!existingUser) {
+                return res.status(404).send({error: 'User not found'});
+            }
+    
+            const result = await UsersModel.deleteUser(id);
+            res.status(200).json({ message: 'User deleted successfully', result });
+        } catch (err) {
+            console.error(err);
+            res.status(500).send('Error deleting user');
+        }
+    }
+
     static async connect (req, res) {
         if (!req.body) {
             return res.status(400).send('Body required');

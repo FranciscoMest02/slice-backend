@@ -20,6 +20,21 @@ export class UsersModel {
         }
     }
 
+    static async deleteUser(id) {
+      const session = driver.session();
+      try {
+        const query = `
+          MATCH (user:User {id: $id})
+          DETACH DELETE user
+        `;
+        const params = { id };
+        const result = await session.run(query, params);
+        return result
+      } finally {
+        await session.close();
+      }
+    }
+
     static async getFromUsername(username) {
       const session = driver.session()
       try {
