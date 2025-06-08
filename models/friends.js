@@ -103,4 +103,64 @@ export class FriendsModel {
             await session.close();
         }
     }
+
+    static async removeFriend(userId, friendId) {
+        const session = driver.session();
+        try {
+            const query = `
+                MATCH (u1:User {id: $userId})-[r:FRIENDS_WITH]-(u2:User {id: $friendId})
+                DELETE r
+                RETURN u1, u2
+            `;
+            const params = { userId, friendId };
+            const result = await session.run(query, params);
+            return {
+                user: result.records[0].get('u1').properties,
+                friend: result.records[0].get('u2').properties,
+            };
+        } finally {
+            await session.close();
+        }
+    }
+
+    static async blockUser(userId, blockedId) {
+        const session = driver.session();
+        try {
+            const query = `
+                MATCH (u1:User {id: $userId}), (u2:User {id: $blockedId})
+                OPTIONAL MATCH (u1)-[r1:FRIENDS_WITH]->(u2)
+                OPTIONAL MATCH (u2)-[r2:FRIENDS_WITH]->(u1)
+                DELETE r1, r2
+                MERGE (u1)-[:BLOCKED]->(u2)
+                RETURN u1, u2
+            `;
+            const params = { userId, blockedId };
+            const result = await session.run(query, params);
+            return {
+                user: result.records[0].get('u1').properties,
+                blocked: result.records[0].get('u2').properties,
+            };
+        } finally {
+            await session.close();
+        }
+    }
+
+    static async unblockUser(userId, blockedId) {
+        const session = driver.session();
+        try {
+            const query = `
+                MATCH (u1:User {id: $userId})-[r:BLOCKED]-(u2:User {id: $blockedId})
+                DELETE r
+                RETURN u1, u2
+            `;
+            const params = { userId, blockedId };
+            const result = await session.run(query, params);
+            return {
+                user: result.records[0].get('u1').properties,
+                unblocked: result.records[0].get('u2').properties,
+            };
+        } finally {
+            await session.close();
+        }
+    }
 }
