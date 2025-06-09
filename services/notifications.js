@@ -20,7 +20,6 @@ export async function sendPairNotifications() {
         });
 
         try {
-          await apnProvider.send(notification, user.deviceToken);
           const result = await apnProvider.send(notification, user.deviceToken);
           console.log("APNs response:", JSON.stringify(result, null, 2));
           console.log(`Notification sent to user ${user.id}`);
