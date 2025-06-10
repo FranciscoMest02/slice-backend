@@ -204,4 +204,49 @@ export class FriendsModel {
             await session.close();
         }
     }
+
+    static async isBlocked(userId, blockedId) {
+        const session = driver.session();
+        try {
+            const query = `
+                MATCH (u1:User {id: $userId})-[r:BLOCKED]-(u2:User {id: $blockedId})
+                RETURN u2 { .id, .name } AS blocked
+            `;
+            const params = { userId, blockedId };
+            const result = await session.run(query, params);
+            return result.records.length > 0 ? result.records[0].get('blocked') : null;
+        } finally {
+            await session.close();
+        }
+    }
+
+    static async friendRequestExists(userId, friendId) {
+        const session = driver.session()
+        try {
+            const query = `
+                MATCH (u1:User {id: $userId})<-[:REQUESTED_FRIEND]-(u2:User {id: $friendId})
+                RETURN u2 { .id, .name } AS from
+            `;
+            const params = { userId, friendId };
+            const result = await session.run(query, params);
+            return result.records.length > 0 ? result.records[0].get('from') : null;
+        } finally {
+            await session.close();
+        }
+    }
+
+    static async areFriends(userId, friendId) {
+        const session = driver.session();
+        try {
+            const query = `
+                MATCH (u1:User {id: $userId})-[:FRIENDS_WITH]-(u2:User {id: $friendId})
+                RETURN u2 { .id, .name } AS friend
+            `;
+            const params = { userId, friendId };
+            const result = await session.run(query, params);
+            return result.records.length > 0 ? result.records[0].get('friend') : null;
+        } finally {
+            await session.close();
+        }
+    }
 }

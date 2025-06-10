@@ -122,4 +122,98 @@ export class FriendsController {
             res.status(500).send('Error unblocking user');
         }
     }
+
+    static async getUserInfoForFriendRequest(req, res) {
+        const friendId = req.params?.id?.toLowerCase();
+        const userId = req.body?.from?.toLowerCase();
+
+        if (!userId) {
+            return res.status(400).json({
+                status: "error",
+                error: {
+                    code: 400,
+                    message: "User ID is required"
+                }
+            });
+        }
+
+        if (!friendId) {
+            return res.status(400).json({
+                status: "error",
+                error: {
+                    code: 400,
+                    message: "Friend ID is required"
+                }
+            });
+        }
+
+        try {
+            const user = await UsersModel.getUser(userId);
+        
+            if (!user || !user.user) {
+                return res.status(404).json({
+                    status: "error",
+                    error: {
+                        code: 404,
+                        message: "User not found"
+                    }
+                });
+            }
+
+            const friend = await UsersModel.getUser(friendId);
+        
+            if (!friend || !friend.user) {
+                return res.status(404).json({
+                    status: "error",
+                    error: {
+                        code: 404,
+                        message: "Friend not found"
+                    }
+                });
+            }
+
+            const isBlocked = await FriendsModel.isBlocked(userId, friendId);
+            
+            if (isBlocked) {
+                return res.status(200).json({
+                    status: "success",
+                    data: {
+                        user: friend.user,
+                        friendRequestStatus: "blocked"
+                    }
+                });
+            }
+
+            let friendRequestStatus = "can_send";
+
+            const requestFromFriend = await FriendsModel.friendRequestExists(userId, friendId);
+            const requestToFriend = await FriendsModel.friendRequestExists(friendId, userId);
+            const areAlreadyFriends = await FriendsModel.areFriends(userId, friendId);
+
+            if (areAlreadyFriends) {
+                friendRequestStatus = "already_friends";
+            } else if (requestFromFriend) {
+                friendRequestStatus = "already_received";
+            } else if (requestToFriend) {
+                friendRequestStatus = "already_sent";
+            }
+
+            return res.status(200).json({
+                status: "success",
+                data: {
+                    user: friend.user,
+                    friendRequestStatus
+                }
+            });
+        } catch (err) {
+            console.error(err);
+            return res.status(500).json({
+                status: "error",
+                error: {
+                    code: 500,
+                    message: "Internal server error"
+                }
+            });
+        }
+    }
 }
