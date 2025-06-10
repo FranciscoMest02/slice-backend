@@ -3,10 +3,25 @@ import { promptsArray } from "../prompts.js";
 import todayString from "../utils/date.js";
 import { v4 as uuidv4 } from 'uuid';
 
+const MAX_FRIENDS = 6;
+
 export class FriendsModel {
     static async requestFriendship(senderId, receiverId) {
         const session = driver.session();
         try {
+            const friendCountQuery = `
+                MATCH (u:User {id: $userId})-[:FRIENDS_WITH]->(f:User)
+                RETURN count(f) AS friendCount
+            `;
+
+            const countResult = await session.run(friendCountQuery, { userId: senderId });
+            const currentCount = countResult.records[0].get('friendCount').toInt();
+
+            if (currentCount >= MAX_FRIENDS) {
+                await session.close();
+                return 'Friend limit reached. Cannot send more requests.'
+            }
+
             const query = `
                 MATCH (sender:User {id: $senderId}), (receiver:User {id: $receiverId})
                 MERGE (sender)-[:REQUESTED_FRIEND]->(receiver)
@@ -44,6 +59,24 @@ export class FriendsModel {
         const today = todayString();
 
         try {
+            const friendCountQuery = `
+                MATCH (u:User {id: $userId})-[:FRIENDS_WITH]->(f:User)
+                RETURN count(f) AS friendCount
+            `;
+
+            const deletePendingRequestsQuery = `
+                MATCH (u:User {id: $userId})-[r:REQUESTED_FRIEND]->(:User)
+                DELETE r
+            `;
+
+            const countResult = await session.run(friendCountQuery, { userId });
+            const currentCount = countResult.records[0].get('friendCount').toInt();
+
+            if (currentCount >= MAX_FRIENDS) {
+                await session.close();
+                return 'Friend limit reached. Cannot accept more friends.'
+            }
+
             const query = `
                 MATCH (u1:User {id: $userId})<- [r:REQUESTED_FRIEND] - (u2:User {id: $friendId})
                 DELETE r
@@ -94,6 +127,14 @@ export class FriendsModel {
                     userForSide0
                 });
             }
+
+            const countAfter = await session.run(friendCountQuery, { userId });
+            const updatedCount = countAfter.records[0].get('friendCount').toInt();
+
+            if (updatedCount >= MAX_FRIENDS) {
+                await session.run(deletePendingRequestsQuery, { userId });
+            }
+
             return {
                 user: result.records[0].get('u1').properties,
                 friend: result.records[0].get('u2').properties,
