@@ -147,6 +147,20 @@ export class FriendsController {
             });
         }
 
+        if ( userId === friendId ) {
+            return res.status(200).json({
+                status: "success",
+                data: {
+                    user: {
+                        name: "Your Profile",
+                        id: userId,
+                        avatar: "no-profile"
+                    },
+                    friendRequestStatus: "cant_friend_self"
+                }
+            });
+        }
+
         try {
             const user = await UsersModel.getUser(userId);
         
