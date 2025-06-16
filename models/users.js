@@ -1,6 +1,6 @@
 import driver from "../drivers/neo4j.js";
 import { promptsArray } from "../prompts.js";
-import todayString from "../utils/date.js";
+import todayString, { yesterdayString } from "../utils/date.js";
 import { v4 as uuidv4 } from 'uuid';
 
 export class UsersModel {
@@ -171,19 +171,71 @@ export class UsersModel {
     }
 
     static async getUserPairing (id) {
+        // THIS FUNCTION SHOULD BE REFACTORED, paired_With relationships should have a isActive flag
         const session = driver.session();
         try {
-            const query = `
+          const today = todayString();
+          const yesterday = yesterdayString();
+
+            const queryTodayUser = `
                 MATCH (u:User {id: $id})-[r:PAIRED_WITH {date: $today}]-(pair:User)
                 RETURN pair.name AS name, pair.id AS id, pair.avatar AS avatar, r.id AS sliceId, r.promptId AS promptId, r.userForSide0 AS userForSide0, r.firstUserId AS firstUserId, r.firstHalfKey AS firstHalfKey, r.secondHalfKey AS secondHalfKey, r.finalKey AS finalKey
                 LIMIT 1
             `;
-            const params = { id, today: todayString() }
-            const result = await session.run(query, params)
+            // const params = { id, today: todayString() }
+            const resultTodayUser = await session.run(queryTodayUser, { id, today });
 
-            if (result.records.length === 0) return null
+            if (resultTodayUser.records.length > 0) {
+                const record = resultTodayUser.records[0];
+                const promptId = record.get('promptId');
+                const prompt = promptsArray.find(p => p.id === promptId);
 
-            const record = result.records[0]
+                const isFirst = record.get('firstUserId') === id;
+                const maskHalf = record.get('userForSide0') === id;
+                const mask = maskHalf ? 0 : 1;
+
+                return {
+                    id: record.get('sliceId'),
+                    friend: {
+                        id: record.get('id'),
+                        name: record.get('name'),
+                        avatar: record.get('avatar')
+                    },
+                    prompt,
+                    isFirst,
+                    maskHalf: mask,
+                    firstHalfKey: record.get('firstHalfKey') || null,
+                    secondHalfKey: record.get('secondHalfKey') || null,
+                    completeImage: record.get('finalKey') || null
+                };
+            }
+
+            // Step 2: Check if any pairing exists today for anyone
+            const queryAnyToday = `
+                MATCH ()-[r:PAIRED_WITH {date: $today}]-()
+                RETURN COUNT(r) AS count
+            `;
+            const resultAnyToday = await session.run(queryAnyToday, { today });
+            const count = resultAnyToday.records[0].get('count').toInt();
+
+            if (count > 0) {
+                // Other pairings exist today → return null
+                return null;
+            }
+
+            // Step 3: Fallback to yesterday's pairing for this user
+            const queryYesterday = `
+                MATCH (u:User {id: $id})-[r:PAIRED_WITH {date: $yesterday}]-(pair:User)
+                RETURN pair.name AS name, pair.id AS id, pair.avatar AS avatar, r.id AS sliceId, r.promptId AS promptId, r.userForSide0 AS userForSide0, r.firstUserId AS firstUserId, r.firstHalfKey AS firstHalfKey, r.secondHalfKey AS secondHalfKey, r.finalKey AS finalKey
+                LIMIT 1
+            `;
+            const resultYesterday = await session.run(queryYesterday, { id, yesterday });
+
+            if (resultYesterday.records.length === 0) {
+                return null;
+            }
+
+            const record = resultYesterday.records[0];
             const promptId = record.get('promptId')
             const prompt = promptsArray.find(p => p.id === promptId)
 
