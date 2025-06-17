@@ -5,7 +5,7 @@ export class NotificationService {
     static async sendFriendRequestNotification({ to, from }) {
         const notification = new apn.Notification({
             alert: {
-                title: "Let's tie some knots!",
+                title: "let's tie some knots!",
                 body: `${from} sent you a friend request`,
             },
             topic: 'com.panchito.Slice',
@@ -26,7 +26,7 @@ export class NotificationService {
     static async sendAcceptedFriendRequestNotification({ to, from }) {
         const notification = new apn.Notification({
             alert: {
-                title: "Beautiful knot!",
+                title: "a beautiful knot!",
                 body: `${from} accepted your friend request`,
             },
             topic: 'com.panchito.Slice',
@@ -62,8 +62,8 @@ export class NotificationService {
 
         const notification = new apn.Notification({
             alert: {
-                title: title || "New updates!",
-                body: description || "Your friend has updated their knot",
+                title: title || "new updates!",
+                body: description || "your friend has updated their knot",
             },
             contentAvailable: 1, // Silent notification
             topic: 'com.panchito.Slice',
