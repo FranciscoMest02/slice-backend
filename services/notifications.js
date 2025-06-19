@@ -13,8 +13,8 @@ export async function sendPairNotifications() {
         const notification = new apn.Notification({
             
           alert: {
-            title: "Ready to knot!",
-            body: "Jump in and discover your new pair!"
+            title: "ready to knot?",
+            body: "click to discover your knotmate of the day!"
           },
           topic: process.env.APNS_BUNDLE_ID
         });
