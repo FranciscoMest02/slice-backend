@@ -1,15 +1,16 @@
 import driver from "../drivers/neo4j.js";
 import { promptsArray } from "../prompts.js";
-import todayString from "../utils/date.js";
+import todayString, { yesterdayString } from "../utils/date.js";
 import { v4 as uuidv4 } from 'uuid';
 
 export async function createPairs() {
     const session = driver.session();
     const today = todayString();
+    const yesterday = yesterdayString()
 
     try {
     const checkResult = await session.run(`
-        MATCH ()-[r:PAIRED_WITH {date: $today}]-()
+        MATCH ()-[r:PAIRED_WITH {date: $today, source: 'daily'}]-()
         RETURN count(r) > 0 AS exists
     `, { today });
 
@@ -25,12 +26,28 @@ export async function createPairs() {
       // 1) Collect every undirected friend pair exactly once
       MATCH (u:User)-[:FRIENDS_WITH]-(f:User)
       WHERE id(u) < id(f)
-      WITH collect([u, f]) AS rawPairs
+        AND NOT EXISTS {
+          MATCH (u)-[:PAIRED_WITH {date: $today}]-(x)
+        }
+        AND NOT EXISTS {
+          MATCH (f)-[:PAIRED_WITH {date: $today}]-(x)
+        }
+      WITH collect([u, f]) AS allPairs
+
+      // STEP 3: Fetch yesterdays pairs
+      MATCH (a:User)-[r:PAIRED_WITH {date: $yesterday}]-(b:User)
+      WHERE id(a) < id(b)
+      WITH allPairs, collect([a, b]) AS yesterdaysPairs
+
+      // STEP 4: Separate into fresh + stale
+      WITH
+        [pair IN allPairs WHERE NOT pair IN yesterdaysPairs] AS freshPairs,
+        [pair IN allPairs WHERE pair IN yesterdaysPairs] AS stalePairs
+
+      // STEP 5: Shuffle both groups independently, then concat fresh + stale
+      WITH apoc.coll.shuffle(freshPairs) + apoc.coll.shuffle(stalePairs) AS pairs
   
-      // 2) Shuffle them randomly (requires APOC)
-      WITH apoc.coll.shuffle(rawPairs) AS pairs
-  
-      // 3) Greedily build up matches, tracking “used” users
+      // 6) Greedily build up matches, tracking “used” users
       WITH reduce(
           state = { used: [], matches: [] },
           pair IN pairs |
@@ -46,13 +63,13 @@ export async function createPairs() {
               END
           ) AS result
   
-      // 4) Unwind the final list of matches and return names
+      // 7) Unwind the final list of matches and return names
       UNWIND result.matches AS pair
       RETURN
           pair[0].id AS user1,
           pair[1].id AS user2;
   
-      `);
+      `, {today, yesterday});
   
       let pairs = result.records.map(record => ({
         user1: record.get('user1'),
@@ -83,7 +100,7 @@ export async function createPairs() {
 
           await session.run(`
               MATCH (a:User {id: $user1}), (b:User {id: $user2})
-              CREATE (a)-[:PAIRED_WITH { id: $sliceId, date: $today, notificationSent: false, promptId: $promptId, firstUserId: $firstUserId , userForSide0: $userForSide0 }]->(b)
+              CREATE (a)-[:PAIRED_WITH { id: $sliceId, date: $today, source: 'daily', notificationSent: false, promptId: $promptId, firstUserId: $firstUserId , userForSide0: $userForSide0 }]->(b)
           `, {
               sliceId,
               user1: pair.user1,
